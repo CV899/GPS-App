@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<<<<<<< HEAD:GPS-App.iml
 <module external.linked.project.id="GPS-App" external.linked.project.path="$MODULE_DIR$" external.root.project.path="$MODULE_DIR$" external.system.id="GRADLE" type="JAVA_MODULE" version="4">
-=======
-<module external.linked.project.id="GPS-App2" external.linked.project.path="$MODULE_DIR$" external.root.project.path="$MODULE_DIR$" external.system.id="GRADLE" type="JAVA_MODULE" version="4">
->>>>>>> f745c1efa0ead76427b1ca061b868b30516a798c:GPS-App2.iml
   <component name="FacetManager">
     <facet type="java-gradle" name="Java-Gradle">
       <configuration>
