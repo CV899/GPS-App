@@ -74,7 +74,7 @@ class RetrieveResults extends Context {
 
         // fetch the list of locations available using Volley
         RequestQueue queue = Volley.newRequestQueue(this);
-        String url = "https://www.ncdc.noaa.gov/cdo-web/api/v2/locations";
+        String url = "https://www.ncdc.noaa.gov/cdo-web/api/webservices/v2";
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
             @Override

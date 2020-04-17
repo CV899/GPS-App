@@ -8,11 +8,24 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.esri.arcgisruntime.ArcGISRuntimeEnvironment;
 import com.esri.arcgisruntime.mapping.ArcGISMap;
 import com.esri.arcgisruntime.mapping.Basemap;
@@ -26,18 +39,36 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+
+import java.util.ArrayList;
+import java.util.Locale;
+
+
 public class MainActivity extends AppCompatActivity {
 
     private MapView mMapView;
     private LocationDisplay mLocationDisplay;
     FusedLocationProviderClient locationClient;
-    double latitude = 34.0270; // latitude and longitude are overwritten if location services are turned on
+    double latitude = 34.0270; // latitude and longitude are overwritten if location services are on
     double longitude = -118.8050;
     EditText location;
     Button submitButton;
     Button GPS_button;
-    String locationVerification; //test variable
-
+    String state;
+    InputStream iS;
+    BufferedReader reader = null;
+    String json;
+    ArrayList<String> cities;
+    ArrayList<String> IDs;
+    Spinner dropDown;
+    int listPosition;
 
     private void setupMap() {
         if (mMapView != null) {
@@ -49,30 +80,161 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mMapView = findViewById(R.id.mapView);
-        location = (EditText) findViewById(R.id.location);
         submitButton = (Button) findViewById(R.id.submitButton);
         GPS_button = (Button) findViewById(R.id.GPS_button);
         locationClient = LocationServices.getFusedLocationProviderClient(this);
+        dropDown = (Spinner) findViewById(R.id.spinner);
 
-        getLastLocation();
         setupMap();
         setupLocationDisplay();
+        getLastLocation();
+        getAddress();
+
+        try {
+            createAllLocationsList();
+        } catch (JSONException | IOException e) {
+            e.printStackTrace();
+        }
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, cities);
+        dropDown.setAdapter(adapter);
+        dropDown.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> arg0, View arg1, int position, long arg3) {
+                listPosition = position;
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> arg0) {
+
+            }
+        });
+
+        GPS_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getLastLocation();
+                getAddress();
+                try {
+                    createStateLocationsList();
+                } catch (IOException | JSONException e) {
+                    e.printStackTrace();
+                }
+                adapter.clear();
+                adapter.addAll(cities);
+                adapter.notifyDataSetChanged();
+                Toast.makeText(MainActivity.this, "Drop down list has been updated!", Toast.LENGTH_LONG).show();
+            }
+        });
+
 
         submitButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                locationVerification = location.getText().toString();
-
                 Intent launchActivity1 = new Intent(MainActivity.this, Results.class);
-                launchActivity1.putExtra("location", locationVerification);
+                launchActivity1.putExtra("location", IDs.get(listPosition));
                 startActivity(launchActivity1);
             }
         });
+    }
+
+    public void createAllLocationsList() throws JSONException, IOException {
+        iS = getAssets().open("cities.json");
+        int size = iS.available();
+        byte[] buffer = new byte[size];
+        iS.read(buffer);
+        iS.close();
+        json = new String(buffer, "UTF-8");
+        JSONObject jsonObj = new JSONObject(json);
+        JSONArray jsonArr = jsonObj.getJSONArray("results");
+
+        cities = new ArrayList<>();
+        IDs = new ArrayList<>();
+        for(int i = 0; i < jsonArr.length() - 1; i++) {
+            JSONObject names = jsonArr.getJSONObject(i);
+            String name = (String) names.get("name");
+            String ID = (String) names.get("id");
+            cities.add(name);
+            IDs.add(ID);
+        }
+
+    }
+
+    public void createStateLocationsList() throws IOException, JSONException {
+        iS = getAssets().open("cities.json");
+        int size = iS.available();
+        byte[] buffer = new byte[size];
+        iS.read(buffer);
+        iS.close();
+        json = new String(buffer, "UTF-8");
+        JSONObject jsonObj = new JSONObject(json);
+        JSONArray jsonArr = jsonObj.getJSONArray("results");
+
+        cities = new ArrayList<>();
+        IDs = new ArrayList<>();
+        for(int i = 0; i < jsonArr.length() - 1; i++) {
+            JSONObject names = jsonArr.getJSONObject(i);
+            String name = (String) names.get("name");
+            String ID = (String) names.get("id");
+            if(name.contains(", " + state)) {
+                cities.add(name);
+                IDs.add(ID);
+            }
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.option_menu, menu);
+        MenuItem syncMenuItem = menu.findItem(R.id.sync);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if(id == R.id.sync)
+            getAddress();
+        return true;
+    }
+
+    private void getAddress() {
+        //Log.d("GPS", String.format("X: %f, Y: %f", longitude, latitude));
+        String url = String.format(Locale.US, "http://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/reverseGeocode?location=%f,%f",longitude,latitude);
+        //Log.d("rGEO", url);
+
+        RequestQueue queue = Volley.newRequestQueue(this);
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+               // Log.d("Res", response);
+                String[] split = response.split("LongLabel", 2); // returns the US state from the address
+                String[] trim = split[1].split("<br/>", 2);
+                String addr = trim[0].substring(6);
+                String[] addrSplit = addr.split(", ");
+                //Log.d("State", addrSplit[2]);  //addrSplit[2] is the abbreviated state
+                state = addrSplit[2];
+                //Toast.makeText(MainActivity.this, addrSplit[2], Toast.LENGTH_LONG).show();
+                queue.stop();
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                String message = "Error in Volley StringRequest";
+                Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
+                queue.stop();
+            }
+        });
+
+        queue.add(stringRequest);
     }
 
     private void getLastLocation() {

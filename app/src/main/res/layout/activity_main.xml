@@ -31,15 +31,14 @@
             android:id="@+id/textView"
             android:layout_width="match_parent"
             android:layout_height="37dp"
-            android:text="Enter city, state (U.S.)" />
+            android:text="Select city, state (U.S.)" />
 
-        <EditText
-            android:id="@+id/location"
+        <Spinner
+            android:id="@+id/spinner"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:ems="10"
-            android:hint="Location (Miami, FL)"
-            android:inputType="textPersonName" />
+            android:background="@android:drawable/btn_dropdown"
+            android:spinnerMode="dropdown" />
 
         <Button
             android:id="@+id/submitButton"
