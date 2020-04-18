@@ -15,6 +15,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
@@ -47,6 +48,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 
@@ -68,6 +70,11 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<String> IDs;
     Spinner dropDown;
     int listPosition;
+    DatePicker selectedDate;
+    String date;
+    List<String> highTemps = new ArrayList<>();
+    List<String> lowTemps = new ArrayList<>();
+    List<String> humidity = new ArrayList<>();
 
     private void setupMap() {
         if (mMapView != null) {
@@ -137,8 +144,11 @@ public class MainActivity extends AppCompatActivity {
         submitButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                selectedDate = (DatePicker) findViewById(R.id.selectDate);
+                date = selectedDate.getYear() + "-" + selectedDate.getMonth() + "-" + selectedDate.getDayOfMonth();
                 Intent launchActivity1 = new Intent(MainActivity.this, Results.class);
-                launchActivity1.putExtra("location", IDs.get(listPosition));
+                launchActivity1.putExtra("location", IDs.get(listPosition).toString());
+                launchActivity1.putExtra("date", date);
                 startActivity(launchActivity1);
             }
         });

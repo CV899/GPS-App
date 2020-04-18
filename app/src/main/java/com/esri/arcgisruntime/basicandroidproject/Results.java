@@ -20,15 +20,18 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.UserHandle;
 import android.view.Display;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -46,6 +49,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,12 +59,21 @@ class RetrieveResults extends Context {
     private TextView displayResults;
     static private String API_KEY = "CUddzkJaeBvQVYmVAgjLnkPALBpgeogF";
     private String id;
-    private JSONArray APIresults = null;
+    private JSONArray maxTempResults = null;
+    private JSONArray minTempResults = null;
+    private JSONArray precipitationResults = null;
+    private LocalDate dateSelected;
+    private LocalDate startDate;
+    private LocalDate endDate;
 
 
-    public RetrieveResults(TextView displayResults, String location) {
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public RetrieveResults(String location, String date, TextView displayResults) {
         this.displayResults = displayResults;
         this.location = location;
+        dateSelected = LocalDate.parse(date);
+        startDate = dateSelected.minusMonths(1);
+        endDate = dateSelected.minusDays(1);
         onPreExecute();
     }
 
@@ -72,15 +85,20 @@ class RetrieveResults extends Context {
 
     protected void doInBackground() {
 
-        // fetch the list of locations available using Volley
+        // fetch the weather data from API; gathers data for a month to a day before the user-selected date
         RequestQueue queue = Volley.newRequestQueue(this);
-        String url = "https://www.ncdc.noaa.gov/cdo-web/api/webservices/v2";
+        String maxTempsUrl = "https://www.ncdc.noaa.gov/cdo-web/api/v2/data?datasetid=GHCND&locationid="
+                + location + "&startdate=" + startDate + "T00:00:00&enddate=" + endDate + "T00:00:00&datatypeid=TMAX&units=standard&limit=1000";
+        String minTempsUrl = "https://www.ncdc.noaa.gov/cdo-web/api/v2/data?datasetid=GHCND&locationid="
+                + location + "&startdate=" + startDate + "T00:00:00&enddate=" + endDate + "T00:00:00&datatypeid=TMIN&units=standard&limit=1000";
+        String precipitatonUrl = "https://www.ncdc.noaa.gov/cdo-web/api/v2/data?datasetid=GHCND&locationid="
+                + location + "&startdate=" + startDate + "T00:00:00&enddate=" + endDate + "T00:00:00&datatypeid=PRCP&units=standard&limit=1000";
 
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+        JsonObjectRequest getMaxTemps = new JsonObjectRequest(Request.Method.GET, maxTempsUrl, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
                 try {
-                    APIresults = response.getJSONArray("results");
+                    maxTempResults = response.getJSONArray("results");
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -98,9 +116,57 @@ class RetrieveResults extends Context {
                         return params;
                     }
             };
-        queue.add(jsonObjectRequest);
+        JsonObjectRequest getPrecipitation = new JsonObjectRequest(Request.Method.GET, precipitatonUrl, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    precipitationResults = response.getJSONArray("results");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        error.printStackTrace();
+                    }
+                }) {
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("token", API_KEY);
+                return params;
+            }
+        };
 
-        // TODO: search for the city ID using the city, state provided by the user
+       JsonObjectRequest getMinTemps = new JsonObjectRequest(Request.Method.GET, minTempsUrl, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    minTempResults = response.getJSONArray("results");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+            }
+        }) {
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("token", API_KEY);
+                return params;
+            }
+        };
+
+        queue.add(getMaxTemps);
+        queue.add(getMinTemps);
+        queue.add(getPrecipitation);
+
+
 
     }
 
@@ -638,17 +704,17 @@ class RetrieveResults extends Context {
 public class Results extends Activity {
 
     String location;
-    TextView displayResults;
+    String date;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.results);
         Intent in = getIntent();
+        TextView displayResults = (TextView) findViewById(R.id.displayResults);
         location = in.getStringExtra("location");
-        displayResults = (TextView) findViewById(R.id.displayResults);
+        date = in.getStringExtra("date");
 
-        // Gather results based on the location the user entered
-        RetrieveResults results = new RetrieveResults(displayResults, location);
+        RetrieveResults results = new RetrieveResults(location, date, displayResults);
 
     }
 }
