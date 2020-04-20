@@ -621,6 +621,8 @@ public class Results extends Activity {
             difference8.add(highTempsWindow8.get(i) - CDhightemps.get(i));
         }
 
+        Log.d("difference1", difference1.toString());
+
         List<Double> square1 = new ArrayList<>();
         List<Double> square2 = new ArrayList<>();
         List<Double> square3 = new ArrayList<>();
@@ -632,8 +634,133 @@ public class Results extends Activity {
 
         // square all values
         for(int i = 0; i < 7; i++) {
-
+            square1.add(Math.pow(difference1.get(i), 2));
+            square2.add(Math.pow(difference1.get(i), 2));
+            square3.add(Math.pow(difference1.get(i), 2));
+            square4.add(Math.pow(difference1.get(i), 2));
+            square5.add(Math.pow(difference1.get(i), 2));
+            square6.add(Math.pow(difference1.get(i), 2));
+            square7.add(Math.pow(difference1.get(i), 2));
+            square8.add(Math.pow(difference1.get(i), 2));
         }
+
+        double sum1 = 0;
+        double sum2 = 0;
+        double sum3 = 0;
+        double sum4 = 0;
+        double sum5 = 0;
+        double sum6 = 0;
+        double sum7 = 0;
+        double sum8 = 0;
+
+        // add values together
+        for(int i = 0; i < 7; i++) {
+            if(!Double.isNaN(square1.get(i)))
+                sum1 = sum1 + square1.get(i);
+            if(!Double.isNaN(square2.get(i)))
+                sum2 = sum2 + square2.get(i);
+            if(!Double.isNaN(square3.get(i)))
+                sum3 = sum3 + square3.get(i);
+            if(!Double.isNaN(square4.get(i)))
+                sum4 = sum4 + square4.get(i);
+            if(!Double.isNaN(square5.get(i)))
+                sum5 = sum5 + square5.get(i);
+            if(!Double.isNaN(square6.get(i)))
+                sum6 = sum6 + square6.get(i);
+            if(!Double.isNaN(square7.get(i)))
+                sum7 = sum7 + square7.get(i);
+            if(!Double.isNaN(square1.get(i)))
+                sum8 = sum8 + square1.get(i);
+        }
+        // take square root
+        double[] ED = new double[8];
+        ED[0] = Math.sqrt(sum1);
+        ED[1] = Math.sqrt(sum2);
+        ED[2] = Math.sqrt(sum3);
+        ED[3] = Math.sqrt(sum4);
+        ED[4] = Math.sqrt(sum5);
+        ED[5] = Math.sqrt(sum6);
+        ED[6] = Math.sqrt(sum7);
+        ED[7] = Math.sqrt(sum8);
+
+        // select corresponding matrix
+        double smallestED = ED[0];
+        int window = 1;
+        for(int i = 1; i < 7; i++) {
+            if(ED[i] < smallestED) {
+                smallestED = ED[i];
+                window = i + 1;
+            }
+        }
+
+        List<Double> highTempWindow = new ArrayList<>();
+        switch(window) {
+            case 1:
+                highTempWindow = highTempsWindow1;
+                break;
+
+            case 2:
+                highTempWindow = highTempsWindow2;
+                break;
+
+            case 3:
+                highTempWindow = highTempsWindow3;
+                break;
+
+            case 4:
+                highTempWindow = highTempsWindow4;
+                break;
+
+            case 5:
+                highTempWindow = highTempsWindow5;
+                break;
+
+            case 6:
+                highTempWindow = highTempsWindow6;
+                break;
+
+            case 7:
+                highTempWindow = highTempsWindow7;
+                break;
+
+            case 8:
+                highTempWindow = highTempsWindow8;
+                break;
+        }
+
+        List<Double> WCCD = new ArrayList<>();
+        List<Double> WCVP = new ArrayList<>();
+        int numToSubtrFromMean = 0;
+        for(int i = 0; i < 7; i++) {
+            if(!Double.isNaN(highTemps.get(i))) {
+                WCCD.add(Math.abs(smallestED - CDhightemps.get(i)));
+                numToSubtrFromMean++;
+            }
+
+            WCVP.add(Math.abs(smallestED - highTempWindow.get(i)));
+        }
+
+        double count = 7 - numToSubtrFromMean;
+        double mean1 = 0;
+        double mean2 = 0;
+
+        for(double i : WCCD) {
+            mean1 = mean1 + i;
+        }
+        for(double i : WCVP) {
+            mean2 = mean2 + i;
+        }
+
+        mean1 = (mean1 / count);
+        mean2 = (mean2 / 7);
+
+        double predictedVarHighTemp = (mean1 + mean2) / 2; // FIXME: variation is very high?
+
+        Log.d("predictedVarHighTemp", "" + predictedVarHighTemp);
+
+
+
+
 
 
 
