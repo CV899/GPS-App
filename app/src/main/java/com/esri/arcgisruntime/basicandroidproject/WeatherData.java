@@ -1,6 +1,7 @@
 package com.esri.arcgisruntime.basicandroidproject;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.room.*;
 
 @Entity(tableName = "weather_data")
@@ -10,10 +11,13 @@ public class WeatherData {
     @ColumnInfo(name = "date")
     private String date;
     @ColumnInfo(name = "mintemp")
+    @Nullable
     private double minTemp;
     @ColumnInfo(name = "maxtemp")
+    @Nullable
     private double maxTemp;
     @ColumnInfo(name = "precipitation")
+    @Nullable
     private double precipitation;
 
     public WeatherData(@NonNull String date, double minTemp, double maxTemp, double precipitation) {

@@ -6,8 +6,11 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.app.Application;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -54,6 +57,7 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
+    public static Context context;
     private MapView mMapView;
     private LocationDisplay mLocationDisplay;
     FusedLocationProviderClient locationClient;
@@ -90,6 +94,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        context = getApplicationContext();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mMapView = findViewById(R.id.mapView);
@@ -145,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 selectedDate = (DatePicker) findViewById(R.id.selectDate);
-                date = selectedDate.getYear() + "-" + selectedDate.getMonth() + "-" + selectedDate.getDayOfMonth();
+                date = selectedDate.getYear() + "-" + (selectedDate.getMonth() + 1) + "-" + selectedDate.getDayOfMonth();
                 Intent launchActivity1 = new Intent(MainActivity.this, Results.class);
                 launchActivity1.putExtra("location", IDs.get(listPosition).toString());
                 launchActivity1.putExtra("date", date);
@@ -224,12 +229,12 @@ public class MainActivity extends AppCompatActivity {
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
-               // Log.d("Res", response);
+                Log.d("Res", response);
                 String[] split = response.split("LongLabel", 2); // returns the US state from the address
                 String[] trim = split[1].split("<br/>", 2);
                 String addr = trim[0].substring(6);
                 String[] addrSplit = addr.split(", ");
-                //Log.d("State", addrSplit[2]);  //addrSplit[2] is the abbreviated state
+                Log.d("State", addrSplit[2]);  //addrSplit[2] is the abbreviated state
                 state = addrSplit[2];
                 //Toast.makeText(MainActivity.this, addrSplit[2], Toast.LENGTH_LONG).show();
                 queue.stop();
@@ -244,6 +249,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         queue.add(stringRequest);
+
     }
 
     private void getLastLocation() {

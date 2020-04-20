@@ -1,6 +1,9 @@
 package com.esri.arcgisruntime.basicandroidproject;
 
+import androidx.lifecycle.LiveData;
 import androidx.room.*;
+
+import java.util.List;
 
 @Dao
 public interface WeatherDataDao {
@@ -19,5 +22,6 @@ public interface WeatherDataDao {
 
     @Query("SELECT precipitation FROM weather_data WHERE date BETWEEN :minDate AND :maxDate")
     double[] getPrecipitation(String minDate, String maxDate);
+
 
 }
