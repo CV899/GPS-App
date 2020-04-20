@@ -108,7 +108,8 @@ public class Results extends Activity {
 
         onPreExecute();
 
-        // initiates a chain of volley calls that pass data and end in populating the database
+        // initiates a chain of volley calls that pass the API data down the line;
+        // ends in populating the database and using the sliding window algorithm to predict weather
         try {
             firstVolleyCall();
         } catch (JSONException e) {
