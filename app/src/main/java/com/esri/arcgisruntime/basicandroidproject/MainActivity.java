@@ -103,9 +103,9 @@ public class MainActivity extends AppCompatActivity {
         locationClient = LocationServices.getFusedLocationProviderClient(this);
         dropDown = (Spinner) findViewById(R.id.spinner);
 
+        getLastLocation();
         setupMap();
         setupLocationDisplay();
-        getLastLocation();
         getAddress();
 
         try {
@@ -131,8 +131,10 @@ public class MainActivity extends AppCompatActivity {
         GPS_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 getLastLocation();
                 getAddress();
+
                 try {
                     createStateLocationsList();
                 } catch (IOException | JSONException e) {
@@ -237,14 +239,14 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("State", addrSplit[2]);  //addrSplit[2] is the abbreviated state
                 state = addrSplit[2];
                 //Toast.makeText(MainActivity.this, addrSplit[2], Toast.LENGTH_LONG).show();
-                queue.stop();
+
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 String message = "Error in Volley StringRequest";
                 Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
-                queue.stop();
+
             }
         });
 

@@ -312,8 +312,9 @@ public class Results extends Activity {
                     e.printStackTrace();
                 }
                 try {
+                    Thread.sleep(2000);
                     fourthVolleyCall(lowTemps);
-                } catch (JSONException e) {
+                } catch (JSONException | InterruptedException e) {
                     e.printStackTrace();
                 }
             }
@@ -734,11 +735,11 @@ public class Results extends Activity {
         int numToSubtrFromMean = 0;
         for(int i = 0; i < 7; i++) {
             if(!Double.isNaN(highTemps.get(i))) {
-                WCCD.add(Math.abs(smallestED - CDhightemps.get(i)));
+                WCCD.add(Math.abs(smallestED - CDhightemps.get(i)) / CDhightemps.get(i));
                 numToSubtrFromMean++;
             }
 
-            WCVP.add(Math.abs(smallestED - highTempWindow.get(i)));
+            WCVP.add(Math.abs(smallestED - highTempWindow.get(i)) / highTempWindow.get(i));
         }
 
         double count = 7 - numToSubtrFromMean;
@@ -754,13 +755,17 @@ public class Results extends Activity {
 
         mean1 = (mean1 / count);
         mean2 = (mean2 / 7);
+        Log.d("mean1", "" + mean1);
+        Log.d("mean2", "" + mean2);
 
-        double predictedVarHighTemp = (mean1 + mean2) / 2; // FIXME: variation is very high?
+        double predictedVarHighTemp = (mean1 + mean2) / 2;
 
         Log.d("predictedVarHighTemp", "" + predictedVarHighTemp);
 
+        double low = highTemps.get(highTemps.size() - 2) - predictedVarHighTemp;
+        double high = highTemps.get(highTemps.size() - 2) + predictedVarHighTemp;
 
-
+        displayResults.setText("High Temperature: " + Math.round(low) + " - " + Math.round(high) + " degrees F");
 
 
 

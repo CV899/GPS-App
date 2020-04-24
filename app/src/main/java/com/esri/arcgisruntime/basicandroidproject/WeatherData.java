@@ -11,14 +11,11 @@ public class WeatherData {
     @ColumnInfo(name = "date")
     private String date;
     @ColumnInfo(name = "mintemp")
-    @Nullable
-    private double minTemp;
+    @Nullable private double minTemp;
     @ColumnInfo(name = "maxtemp")
-    @Nullable
-    private double maxTemp;
+    @Nullable private double maxTemp;
     @ColumnInfo(name = "precipitation")
-    @Nullable
-    private double precipitation;
+    @Nullable private double precipitation;
 
     public WeatherData(@NonNull String date, double minTemp, double maxTemp, double precipitation) {
         this.date = date;
